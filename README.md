@@ -159,11 +159,24 @@ The FastAPI backend exposes the following endpoints (all prefixed with `/api`):
 
 ## ⚙️ Environment Variables
 
-### Backend Configuration
-You can configure these variables in a `.env` file inside the `backend` directory:
-*   `DATABASE_URL`: The connection string for PostgreSQL (e.g., `postgresql://postgres:postgres@localhost:5432/incident_system`).
-*   `SECRET_KEY`: A secure key used for signing JWTs.
-*   `ACCESS_TOKEN_EXPIRE_MINUTES`: Expiration time for generated access tokens.
+We manage application configuration dynamically through environment variables and `.env` files. Secrets are never hardcoded inside the code or Docker configuration.
 
-### Frontend Configuration
-*   `API_URL`: The URL pointing to the FastAPI backend (defaults to `http://localhost:8000`).
+### Project Setup
+Before starting the application, configure your environments by copying the provided example template:
+1. **For Docker Compose**: Copy `backend/.env.example` to the project root directory as `.env` and adjust the values.
+2. **For Manual Setup**: Copy `backend/.env.example` to `backend/.env` and adjust the values.
+
+### Available Variables
+
+#### Database Credentials
+*   `POSTGRES_USER`: The admin username for PostgreSQL (defaults to `postgres`).
+*   `POSTGRES_PASSWORD`: The admin password for PostgreSQL (defaults to `postgres`).
+*   `POSTGRES_DB`: The name of the database (defaults to `incident_system`).
+
+#### Backend Application
+*   `DATABASE_URL`: The full connection string for PostgreSQL (e.g., `postgresql://postgres:postgres@localhost:5432/incident_system` for local runs, or `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}` inside Docker).
+*   `SECRET_KEY`: A secure random key used for signing JWTs (must be at least 32 characters in production).
+*   `ACCESS_TOKEN_EXPIRE_MINUTES`: Expiration time for generated access tokens (defaults to 1 day).
+
+#### Frontend Configuration
+*   `API_URL`: The URL pointing to the FastAPI backend (automatically set to `http://backend:8000` in Docker Compose, or defaults to `http://localhost:8000` for local runs).
