@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: incident_system_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: incident_system
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-incident_system}
     ports:
       - "5432:5432"
     volumes:
@@ -26,8 +26,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/incident_system
-      SECRET_KEY: your-secret-key-change-in-production-min-32-chars
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-username}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-incident_system}}
+      SECRET_KEY: ${SECRET_KEY:-random-key}
     depends_on:
       postgres:
         condition: service_healthy
