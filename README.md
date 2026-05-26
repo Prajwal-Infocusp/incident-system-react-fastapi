@@ -180,3 +180,9 @@ Before starting the application, configure your environments by copying the prov
 
 #### Frontend Configuration
 *   `API_URL`: The URL pointing to the FastAPI backend (automatically set to `http://backend:8000` in Docker Compose, or defaults to `http://localhost:8000` for local runs).
+
+---
+
+## 🚢 Production Deployment
+
+For complete, step-by-step instructions on how to build, containerize, and deploy the entire full-stack application to **GCP Cloud Run** with a **Supabase PostgreSQL database**, please refer to our dedicated **[Production Deployment Guide (DEPLOYMENT.md)](DEPLOYMENT.md)**.
