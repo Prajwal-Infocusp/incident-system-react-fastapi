@@ -138,6 +138,14 @@ Ensure you have a PostgreSQL server running locally. Create a database named `in
 
 ---
 
+### Method 3: Local Kubernetes (Minikube)
+
+If you want to deploy or practice running the application inside a local Kubernetes cluster using Minikube, we provide a dedicated configuration and guide.
+
+Please refer to our **[Kubernetes Deployment Guide (KUBERNETES.md)](KUBERNETES.md)** for step-by-step setup and reference commands.
+
+---
+
 ## 🔒 API Endpoints
 
 The FastAPI backend exposes the following endpoints (all prefixed with `/api`):

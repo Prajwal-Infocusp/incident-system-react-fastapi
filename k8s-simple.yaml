@@ -1,0 +1,172 @@
+# ========================================================
+# 1. FRONTEND CONFIGMAP (Custom Nginx configuration)
+# ========================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+data:
+  default.conf.template: |
+    server {
+        listen ${PORT};
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html index.htm;
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /api/ {
+            # Use Kubernetes internal CoreDNS IP for reliable resolution
+            resolver 10.96.0.10 valid=30s;
+            set $upstream ${BACKEND_URL};
+            proxy_pass $upstream;
+            proxy_ssl_server_name on;
+            proxy_set_header Host $proxy_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+---
+# ========================================================
+# 2. DATABASE SERVICE & DEPLOYMENT (No Persistent Volume)
+# ========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: incident_system
+          ports:
+            - containerPort: 5432
+
+---
+# ========================================================
+# 3. BACKEND SERVICE & DEPLOYMENT
+# ========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "until pg_isready -h postgres-service -p 5432 -U postgres; do echo waiting for database; sleep 2; done"]
+      containers:
+        - name: backend
+          image: incident-backend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "8000"
+            - name: DATABASE_URL
+              value: postgresql://postgres:postgres@postgres-service:5432/incident_system
+            - name: SECRET_KEY
+              value: your-secret-key-change-in-production-min-32-chars
+          ports:
+            - containerPort: 8000
+
+---
+# ========================================================
+# 4. FRONTEND SERVICE & DEPLOYMENT
+# ========================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 5173
+      targetPort: 5173
+      nodePort: 30007
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: incident-frontend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "5173"
+            - name: BACKEND_URL
+              value: "http://backend-service.default.svc.cluster.local:8000"
+          volumeMounts:
+            - name: nginx-template-volume
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template 
+          ports:
+            - containerPort: 5173
+      volumes:
+        - name: nginx-template-volume
+          configMap:
+            name: frontend-nginx-config
