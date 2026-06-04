@@ -4,6 +4,7 @@ import { api } from '../api';
 import { Incident, UserSummary, SEVERITY_COLORS, STATUS_COLORS } from '../types';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
+import { Label } from '../components/ui/Label';
 import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
@@ -37,11 +38,6 @@ export default function Incidents() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
-    console.log('Incidents page: fetching with params', {
-      status: searchParams.get('status'),
-      severity: searchParams.get('severity'),
-      assignee: searchParams.get('assignee'),
-    });
     Promise.all([
       api.incidents.list({
         status: searchParams.get('status') || undefined,
@@ -51,7 +47,6 @@ export default function Incidents() {
       api.users.list(),
     ])
       .then(([incidentsData, usersData]) => {
-        console.log('Incidents fetched:', incidentsData);
         setIncidents(incidentsData);
         setUsers(usersData);
       })
@@ -123,39 +118,48 @@ export default function Incidents() {
         </Link>
       </div>
 
-      <div className="flex gap-4">
-        <Select
-          value={searchParams.get('status') || 'all'}
-          onValueChange={(v) => handleFilterChange('status', v)}
-          options={[
-            { value: 'all', label: 'All Status' },
-            { value: 'OPEN', label: 'Open' },
-            { value: 'INVESTIGATING', label: 'Investigating' },
-            { value: 'RESOLVED', label: 'Resolved' },
-          ]}
-          className="w-40"
-        />
-        <Select
-          value={searchParams.get('severity') || 'all'}
-          onValueChange={(v) => handleFilterChange('severity', v)}
-          options={[
-            { value: 'all', label: 'All Severity' },
-            { value: 'LOW', label: 'Low' },
-            { value: 'MEDIUM', label: 'Medium' },
-            { value: 'HIGH', label: 'High' },
-            { value: 'CRITICAL', label: 'Critical' },
-          ]}
-          className="w-40"
-        />
-        <Select
-          value={searchParams.get('assignee') || 'all'}
-          onValueChange={(v) => handleFilterChange('assignee', v)}
-          options={[
-            { value: 'all', label: 'All Assignees' },
-            ...users.map(u => ({ value: u.id, label: u.name || u.email })),
-          ]}
-          className="w-48"
-        />
+      <div className="flex flex-wrap gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Status</Label>
+          <Select
+            value={searchParams.get('status') || 'all'}
+            onValueChange={(v) => handleFilterChange('status', v)}
+            options={[
+              { value: 'all', label: 'All statuses' },
+              { value: 'OPEN', label: 'Open' },
+              { value: 'INVESTIGATING', label: 'Investigating' },
+              { value: 'RESOLVED', label: 'Resolved' },
+            ]}
+            className="w-[160px]"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Severity</Label>
+          <Select
+            value={searchParams.get('severity') || 'all'}
+            onValueChange={(v) => handleFilterChange('severity', v)}
+            options={[
+              { value: 'all', label: 'All severities' },
+              { value: 'LOW', label: 'Low' },
+              { value: 'MEDIUM', label: 'Medium' },
+              { value: 'HIGH', label: 'High' },
+              { value: 'CRITICAL', label: 'Critical' },
+            ]}
+            className="w-[160px]"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Assignee</Label>
+          <Select
+            value={searchParams.get('assignee') || 'all'}
+            onValueChange={(v) => handleFilterChange('assignee', v)}
+            options={[
+              { value: 'all', label: 'All assignees' },
+              ...users.map(u => ({ value: u.id, label: u.name || u.email })),
+            ]}
+            className="w-[160px]"
+          />
+        </div>
       </div>
 
       {incidents.length === 0 ? (
@@ -172,7 +176,10 @@ export default function Incidents() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Title</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('severity')}>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                  onClick={() => handleSort('severity')}
+                >
                   <div className="flex items-center gap-1">
                     Severity
                     {sortField === 'severity' ? (
@@ -183,7 +190,10 @@ export default function Incidents() {
                   </div>
                 </TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('assignedTo')}>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                  onClick={() => handleSort('assignedTo')}
+                >
                   <div className="flex items-center gap-1">
                     Assignee
                     {sortField === 'assignedTo' ? (
@@ -193,7 +203,10 @@ export default function Incidents() {
                     )}
                   </div>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('createdBy')}>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                  onClick={() => handleSort('createdBy')}
+                >
                   <div className="flex items-center gap-1">
                     Created By
                     {sortField === 'createdBy' ? (
@@ -203,7 +216,10 @@ export default function Incidents() {
                     )}
                   </div>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort('createdAt')}>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 select-none"
+                  onClick={() => handleSort('createdAt')}
+                >
                   <div className="flex items-center gap-1">
                     Created At
                     {sortField === 'createdAt' ? (

@@ -240,19 +240,30 @@ export default function IncidentDetail() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Activity Timeline</CardTitle>
+          <CardTitle>Activity</CardTitle>
         </CardHeader>
         <CardContent>
           {incident.activities && incident.activities.length > 0 ? (
-            <div className="space-y-4">
+            <div className="relative space-y-6">
+              <div className="absolute left-2 top-3 bottom-3 w-px bg-border" />
               {incident.activities.map((activity) => (
-                <div key={activity.id} className="flex gap-3">
-                  <span className="text-xl">{ACTIVITY_ICONS[activity.action] || '📝'}</span>
-                  <div className="space-y-1">
-                    <p className="text-sm">{activity.message}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.createdBy?.name || activity.createdBy?.email} • {formatDate(activity.createdAt)}
-                    </p>
+                <div key={activity.id} className="relative flex gap-4 pl-8">
+                  <div className="absolute left-0 flex h-5 w-5 items-center justify-center rounded-full bg-background border text-sm">
+                    {ACTIVITY_ICONS[activity.action] || '📝'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium">{activity.message}</p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {activity.createdBy?.name || activity.createdBy?.email}
+                      </p>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(activity.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}

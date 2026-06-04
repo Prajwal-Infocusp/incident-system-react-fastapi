@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { cn } from '../../lib/utils';
 
 interface AlertProps {
   variant?: 'default' | 'destructive';
@@ -13,7 +14,7 @@ export function Alert({ variant = 'default', children, className = '' }: AlertPr
   };
 
   return (
-    <div className={`p-4 rounded-md border ${variants[variant]} ${className}`}>
+    <div className={cn('p-4 rounded-md border', variants[variant], className)}>
       {children}
     </div>
   );
@@ -25,5 +26,5 @@ interface AlertDescriptionProps {
 }
 
 export function AlertDescription({ children, className = '' }: AlertDescriptionProps) {
-  return <div className={`text-sm ${className}`}>{children}</div>;
+  return <div className={cn('text-sm', className)}>{children}</div>;
 }

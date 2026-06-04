@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -88,7 +88,7 @@ export default function Register() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <a href="/login" className="text-blue-600 hover:underline">Sign in</a>
+            <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
           </div>
         </CardContent>
       </Card>

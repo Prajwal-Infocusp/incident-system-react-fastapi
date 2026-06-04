@@ -65,4 +65,8 @@ export const api = {
   users: {
     list: () => request<any[]>('/users'),
   },
+  notifications: {
+    list: () => request<{ notifications: any[]; currentUserId: string | null }>('/notifications'),
+    markRead: (id: string) => request<any>(`/notifications/${id}`, { method: 'POST' }),
+  },
 };

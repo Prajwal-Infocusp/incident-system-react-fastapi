@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
 import { AlertTriangle, LayoutDashboard, LogOut } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Header } from './Header';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -13,8 +15,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex flex-col w-64 border-r bg-white h-screen sticky top-0">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="flex flex-col w-64 border-r bg-white h-screen">
         <div className="flex h-16 items-center px-4 border-b">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-orange-600" />
@@ -48,18 +50,22 @@ export default function Layout({ children }: { children: ReactNode }) {
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
           )}
-          <button
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={logout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="mr-2 h-4 w-4" />
             Sign out
-          </button>
+          </Button>
         </div>
       </aside>
-      <main className="flex-1 p-6 bg-gray-50">
-        {children}
-      </main>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

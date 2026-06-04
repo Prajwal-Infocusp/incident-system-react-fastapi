@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
-from app.routers import auth, incidents, users, activities
+from app.routers import auth, incidents, users, activities, notifications
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +19,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(incidents.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(activities.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
 
 @app.get("/api/health")
 def health_check():
