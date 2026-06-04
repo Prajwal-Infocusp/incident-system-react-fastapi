@@ -47,7 +47,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 px-4 text-foreground">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
           <AlertTriangle className="h-8 w-8 text-orange-600" />

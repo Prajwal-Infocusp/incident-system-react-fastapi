@@ -86,7 +86,7 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground">In progress</p>
           </CardContent>
         </Card>
-        <Card className={criticalCount > 0 ? 'border-red-200 bg-red-50' : ''}>
+        <Card className={criticalCount > 0 ? 'border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Critical</CardTitle>
             <AlertOctagon className="h-4 w-4 text-red-600" />
@@ -96,7 +96,7 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground">Needs immediate attention</p>
           </CardContent>
         </Card>
-        <Card className={assignedToMeCount > 0 ? 'border-blue-200 bg-blue-50' : ''}>
+        <Card className={assignedToMeCount > 0 ? 'border-blue-200 bg-blue-50 dark:border-blue-900/50 dark:bg-blue-950/20' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Assigned to You</CardTitle>
             <UserCircle className="h-4 w-4 text-blue-600" />

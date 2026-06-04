@@ -15,8 +15,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="flex flex-col w-64 border-r bg-white h-screen">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <aside className="flex flex-col w-64 border-r bg-card text-card-foreground h-screen">
         <div className="flex h-16 items-center px-4 border-b">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-orange-600" />
@@ -33,8 +33,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                 to={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                 }`}
               >
                 <item.icon className="h-5 w-5" />
@@ -52,7 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           )}
           <Button
             variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
             onClick={logout}
           >
             <LogOut className="mr-2 h-4 w-4" />
@@ -62,7 +62,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <main className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-zinc-950">
           {children}
         </main>
       </div>

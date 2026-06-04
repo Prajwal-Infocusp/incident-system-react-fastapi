@@ -83,16 +83,16 @@ export const SEVERITY_ORDER: Record<Severity, number> = {
 };
 
 export const SEVERITY_COLORS: Record<Severity, string> = {
-  LOW: 'bg-green-100 text-green-800',
-  MEDIUM: 'bg-yellow-100 text-yellow-800',
-  HIGH: 'bg-orange-100 text-orange-800',
-  CRITICAL: 'bg-red-100 text-red-800',
+  LOW: 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-300',
+  MEDIUM: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300',
+  HIGH: 'bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300',
+  CRITICAL: 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300',
 };
 
 export const STATUS_COLORS: Record<IncidentStatus, string> = {
-  OPEN: 'bg-blue-100 text-blue-800',
-  INVESTIGATING: 'bg-yellow-100 text-yellow-800',
-  RESOLVED: 'bg-green-100 text-green-800',
+  OPEN: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300',
+  INVESTIGATING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300',
+  RESOLVED: 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-300',
 };
 
 export const ACTIVITY_ICONS: Record<ActivityAction, string> = {
