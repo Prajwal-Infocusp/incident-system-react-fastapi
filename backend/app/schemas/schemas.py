@@ -118,3 +118,6 @@ class IncidentStats(BaseModel):
     resolved: int
     critical: int
     assignedToMe: int = 0
+
+class GoogleLoginRequest(BaseModel):
+    credential: str

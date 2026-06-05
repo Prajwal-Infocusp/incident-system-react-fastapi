@@ -1,95 +1,94 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Alert, AlertDescription } from '../components/ui/Alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { googleLogin } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id-here.apps.googleusercontent.com';
 
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
+    const handleCredentialResponse = async (response: any) => {
+      setLoading(true);
+      setError('');
+      try {
+        await googleLogin(response.credential);
+        navigate('/');
+      } catch (err: any) {
+        setError(err.message || 'Failed to authenticate with Google');
+        setLoading(false);
+      }
+    };
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
+    // Poll until window.google is loaded (since script is loaded async)
+    const checkGoogleScript = setInterval(() => {
+      if ((window as any).google) {
+        clearInterval(checkGoogleScript);
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+        });
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById('google-signup-button'),
+          { 
+            theme: 'outline', 
+            size: 'large', 
+            width: '320',
+            text: 'signup_with',
+            shape: 'rectangular'
+          }
+        );
+      }
+    }, 100);
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      await register(name, email, password);
-      navigate('/login?registered=true');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
-      setLoading(false);
-    }
-  }
+    return () => clearInterval(checkGoogleScript);
+  }, [googleLogin, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 px-4 text-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 px-4 text-foreground transition-colors duration-300">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <AlertTriangle className="h-8 w-8 text-orange-600" />
-          <span className="text-2xl font-bold text-orange-600">Infocusp IncidentHub</span>
+          <AlertTriangle className="h-10 w-10 text-orange-600" />
+          <span className="text-3xl font-extrabold text-orange-600 tracking-tight">Infocusp IncidentHub</span>
         </div>
+        <p className="text-muted-foreground text-sm">Centralized operations incident manager</p>
       </div>
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-          <CardDescription>Enter your details to get started</CardDescription>
+      
+      <Card className="w-full max-w-md shadow-xl border border-muted/50 bg-card/80 backdrop-blur-md">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">Create an account</CardTitle>
+          <CardDescription>
+            Register your profile using your corporate Google account to begin tracking incidents
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" type="text" placeholder="John Doe" required />
+        <CardContent className="flex flex-col items-center justify-center pt-2 pb-8">
+          {error && (
+            <Alert variant="destructive" className="w-full mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-6">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <span className="text-sm font-medium text-muted-foreground">Creating your account...</span>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+          ) : (
+            <div className="flex flex-col items-center w-full py-4">
+              <div id="google-signup-button" className="min-h-[44px]" />
+              
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" placeholder="••••••••" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" required />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create account'}
-            </Button>
-          </form>
-          <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
