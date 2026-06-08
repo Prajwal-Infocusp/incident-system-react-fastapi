@@ -19,6 +19,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new Error(error.detail || 'An error occurred');
   }
 
+  if (response.status === 204) {
+    return {} as any;
+  }
+
   return response.json();
 }
 
@@ -28,6 +32,16 @@ export const api = {
       request<{ access_token: string; token_type: string }>('/auth/google', {
         method: 'POST',
         body: JSON.stringify({ credential }),
+      }),
+    login: (data: any) =>
+      request<{ access_token: string; token_type: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    register: (data: any) =>
+      request<{ access_token: string; token_type: string }>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
       }),
     me: () => request<any>('/auth/me'),
   },
@@ -59,6 +73,20 @@ export const api = {
   },
   users: {
     list: () => request<any[]>('/users'),
+    create: (data: any) =>
+      request<any>('/users', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: any) =>
+      request<any>(`/users/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<void>(`/users/${id}`, {
+        method: 'DELETE',
+      }),
   },
   notifications: {
     list: () => request<{ notifications: any[]; currentUserId: string | null }>('/notifications'),

@@ -5,6 +5,7 @@ from enum import Enum
 
 class Role(str, Enum):
     USER = "USER"
+    MANAGER = "MANAGER"
     ADMIN = "ADMIN"
 
 class Severity(str, Enum):
@@ -33,11 +34,18 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: Optional[str] = None
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[Role] = None
+    password: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: str
     name: Optional[str]
     email: str
     role: Role
+    hasPassword: bool
     createdAt: datetime
     updatedAt: datetime
 

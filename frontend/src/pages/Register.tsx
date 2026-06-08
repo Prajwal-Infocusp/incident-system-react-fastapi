@@ -3,11 +3,17 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Alert, AlertDescription } from '../components/ui/Alert';
+import { Input } from '../components/ui/Input';
+import { Label } from '../components/ui/Label';
+import { Button } from '../components/ui/Button';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { googleLogin } = useAuth();
+  const { googleLogin, register } = useAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +56,19 @@ export default function Register() {
     return () => clearInterval(checkGoogleScript);
   }, [googleLogin, navigate]);
 
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await register(email, password, name);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account');
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 px-4 text-foreground transition-colors duration-300">
       <div className="mb-8 text-center">
@@ -64,31 +83,81 @@ export default function Register() {
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">Create an account</CardTitle>
           <CardDescription>
-            Register your profile using your corporate Google account to begin tracking incidents
+            Register your profile to begin tracking incidents
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center pt-2 pb-8">
+        <CardContent className="flex flex-col pt-2 pb-8">
           {error && (
             <Alert variant="destructive" className="w-full mb-6">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          {loading ? (
+          {loading && (
             <div className="flex flex-col items-center justify-center gap-3 py-6">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
               <span className="text-sm font-medium text-muted-foreground">Creating your account...</span>
             </div>
-          ) : (
-            <div className="flex flex-col items-center w-full py-4">
-              <div id="google-signup-button" className="min-h-[44px]" />
-              
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:underline">Sign in</Link>
-              </div>
-            </div>
           )}
+
+          <div className={loading ? "hidden" : "space-y-6"}>
+            <form onSubmit={handleEmailRegister} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@organization.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Create Account
+              </Button>
+            </form>
+
+            <div className="relative flex items-center justify-center my-4">
+              <div className="border-t w-full absolute border-muted-foreground/20"></div>
+              <span className="bg-card px-3 text-xs text-muted-foreground relative z-10 font-medium uppercase">
+                Or continue with
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center w-full">
+              <div id="google-signup-button" className="min-h-[44px]" />
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link to="/login" className="text-blue-600 hover:underline font-semibold dark:text-blue-400">
+                Sign in
+              </Link>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

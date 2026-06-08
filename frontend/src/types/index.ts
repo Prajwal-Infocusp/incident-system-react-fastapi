@@ -1,4 +1,4 @@
-export type Role = 'USER' | 'ADMIN';
+export type Role = 'USER' | 'MANAGER' | 'ADMIN';
 
 export type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
@@ -11,6 +11,7 @@ export interface User {
   name: string | null;
   email: string;
   role: Role;
+  hasPassword: boolean;
   createdAt: string;
   updatedAt: string;
 }

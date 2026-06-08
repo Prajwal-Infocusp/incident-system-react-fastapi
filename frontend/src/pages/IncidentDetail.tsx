@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { Incident, UserSummary, SEVERITY_COLORS, STATUS_COLORS, IncidentStatus, Severity } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -30,6 +31,7 @@ const ACTIVITY_ICONS: Record<string, string> = {
 
 export default function IncidentDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [incident, setIncident] = useState<Incident | null>(null);
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,38 +147,64 @@ export default function IncidentDetail() {
                   <Select
                     value={status}
                     onValueChange={(v) => setStatus(v as IncidentStatus)}
-                    options={[
-                      { value: 'OPEN', label: 'Open' },
-                      { value: 'INVESTIGATING', label: 'Investigating' },
-                      { value: 'RESOLVED', label: 'Resolved' },
-                    ]}
+                    options={
+                      user?.role === 'USER'
+                        ? [
+                            ...(status === 'OPEN' ? [{ value: 'OPEN', label: 'Open' }] : []),
+                            { value: 'INVESTIGATING', label: 'Investigating' },
+                            { value: 'RESOLVED', label: 'Resolved' },
+                          ]
+                        : [
+                            { value: 'OPEN', label: 'Open' },
+                            { value: 'INVESTIGATING', label: 'Investigating' },
+                            { value: 'RESOLVED', label: 'Resolved' },
+                          ]
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Severity</Label>
+                  {user?.role === 'USER' ? (
+                    <div className="pt-2">
+                      <Badge className={`${SEVERITY_COLORS[severity]} border font-semibold shadow-sm`}>
+                        {severity}
+                      </Badge>
+                    </div>
+                  ) : (
+                    <Select
+                      value={severity}
+                      onValueChange={(v) => setSeverity(v as Severity)}
+                      options={[
+                        { value: 'LOW', label: 'Low' },
+                        { value: 'MEDIUM', label: 'Medium' },
+                        { value: 'HIGH', label: 'High' },
+                        { value: 'CRITICAL', label: 'Critical' },
+                      ]}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              {user?.role === 'USER' ? (
+                <div className="space-y-2">
+                  <Label>Assignee</Label>
+                  <p className="text-sm font-medium pt-1">
+                    {incident.assignedTo?.name || incident.assignedTo?.email || 'Unassigned'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Assignee</Label>
                   <Select
-                    value={severity}
-                    onValueChange={(v) => setSeverity(v as Severity)}
+                    value={assignedToId}
+                    onValueChange={setAssignedToId}
                     options={[
-                      { value: 'LOW', label: 'Low' },
-                      { value: 'MEDIUM', label: 'Medium' },
-                      { value: 'HIGH', label: 'High' },
-                      { value: 'CRITICAL', label: 'Critical' },
+                      { value: 'unassigned', label: 'Unassigned' },
+                      ...users.map(u => ({ value: u.id, label: u.name || u.email })),
                     ]}
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Assignee</Label>
-                <Select
-                  value={assignedToId}
-                  onValueChange={setAssignedToId}
-                  options={[
-                    { value: 'unassigned', label: 'Unassigned' },
-                    ...users.map(u => ({ value: u.id, label: u.name || u.email })),
-                  ]}
-                />
-              </div>
+              )}
               <div className="space-y-2">
                 <Label>Add Comment</Label>
                 <Textarea

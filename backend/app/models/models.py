@@ -6,6 +6,7 @@ import enum
 
 class Role(enum.Enum):
     USER = "USER"
+    MANAGER = "MANAGER"
     ADMIN = "ADMIN"
 
 class Severity(enum.Enum):
@@ -40,6 +41,10 @@ class User(Base):
     createdIncidents = relationship("Incident", back_populates="createdBy", foreign_keys="Incident.createdById")
     assignedIncidents = relationship("Incident", back_populates="assignedTo", foreign_keys="Incident.assignedToId")
     activities = relationship("IncidentActivity", back_populates="createdBy")
+
+    @property
+    def hasPassword(self) -> bool:
+        return self.password is not None and self.password != ""
 
 class Incident(Base):
     __tablename__ = "incidents"

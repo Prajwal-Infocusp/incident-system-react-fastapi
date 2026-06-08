@@ -5,8 +5,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.database import get_db
 from app.models.models import User
-from app.schemas.schemas import UserResponse, Token, GoogleLoginRequest
-from app.auth import create_access_token, get_current_user
+from app.schemas.schemas import UserResponse, Token, GoogleLoginRequest, UserCreate, LoginRequest
+from app.auth import create_access_token, get_current_user, get_password_hash, verify_password
 from app.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -50,6 +50,65 @@ def google_auth(login_data: GoogleLoginRequest, db: Session = Depends(get_db)):
         db.add(user)
         db.commit()
         db.refresh(user)
+        
+    access_token = create_access_token(
+        data={"sub": user.email},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/register", response_model=Token)
+def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered. Please log in."
+        )
+    
+    if not user_data.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is required for registration."
+        )
+    
+    hashed_password = get_password_hash(user_data.password)
+    user = User(
+        name=user_data.name,
+        email=user_data.email,
+        password=hashed_password,
+        role=user_data.role
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    access_token = create_access_token(
+        data={"sub": user.email},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login", response_model=Token)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == login_data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
+    
+    if not user.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This email is registered via Google. Please log in with Google."
+        )
+    
+    if not verify_password(login_data.password, user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
         
     access_token = create_access_token(
         data={"sub": user.email},

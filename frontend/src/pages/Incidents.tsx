@@ -155,6 +155,7 @@ export default function Incidents() {
             onValueChange={(v) => handleFilterChange('assignee', v)}
             options={[
               { value: 'all', label: 'All assignees' },
+              { value: 'unassigned', label: 'Unassigned' },
               ...users.map(u => ({ value: u.id, label: u.name || u.email })),
             ]}
             className="w-[160px]"

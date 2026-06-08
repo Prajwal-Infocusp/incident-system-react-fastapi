@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.models import User, IncidentActivity
+from app.models.models import User, IncidentActivity, Role
 from app.schemas.schemas import ActivityCreate, ActivityResponse, UserSummary
 from app.auth import get_current_user
 
@@ -18,6 +18,12 @@ def add_activity(
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incident not found")
+        
+    if current_user.role == Role.USER and incident.createdById != current_user.id and incident.assignedToId != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to add comments/activities to this incident"
+        )
     
     activity = IncidentActivity(
         action=activity_data.action,

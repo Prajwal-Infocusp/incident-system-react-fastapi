@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from app.database import get_db
-from app.models.models import User, Incident, IncidentActivity, ActivityAction, IncidentStatus as ModelIncidentStatus
+from app.models.models import User, Incident, IncidentActivity, ActivityAction, IncidentStatus as ModelIncidentStatus, Role
 from app.schemas.schemas import (
     IncidentCreate, IncidentUpdate, IncidentResponse, 
     IncidentStats, ActivityCreate, ActivityResponse, UserSummary
@@ -21,13 +21,22 @@ def get_incidents(
 ):
     query = db.query(Incident)
     
+    if current_user.role == Role.USER:
+        query = query.filter(
+            (Incident.createdById == current_user.id) | 
+            (Incident.assignedToId == current_user.id)
+        )
+    
     if status:
         query = query.filter(Incident.status == ModelIncidentStatus[status])
     if severity:
         from app.models.models import Severity
         query = query.filter(Incident.severity == Severity[severity])
     if assignee:
-        query = query.filter(Incident.assignedToId == assignee)
+        if assignee == "unassigned":
+            query = query.filter(Incident.assignedToId.is_(None))
+        else:
+            query = query.filter(Incident.assignedToId == assignee)
     
     incidents = query.all()
     
@@ -87,6 +96,12 @@ def get_incident(
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incident not found")
+        
+    if current_user.role == Role.USER and incident.createdById != current_user.id and incident.assignedToId != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view this incident"
+        )
     
     activities = db.query(IncidentActivity).filter(IncidentActivity.incidentId == incident_id).order_by(IncidentActivity.createdAt).all()
     
@@ -121,6 +136,12 @@ def create_incident(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role == Role.USER and incident_data.assignedToId is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Regular users cannot assign incidents"
+        )
+        
     incident = Incident(
         title=incident_data.title,
         description=incident_data.description,
@@ -168,6 +189,32 @@ def update_incident(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Incident not found")
     
     update_data = incident_data.model_dump(exclude_unset=True)
+    
+    if current_user.role == Role.USER:
+        if incident.createdById != current_user.id and incident.assignedToId != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to modify this incident"
+            )
+            
+        if "assignedToId" in update_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Regular users cannot assign or reassign incidents"
+            )
+            
+        if "severity" in update_data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Regular users cannot change incident priority or severity"
+            )
+            
+        if "status" in update_data and update_data["status"] == ModelIncidentStatus.OPEN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Regular users cannot set incident status to Open"
+            )
+            
     for key, value in update_data.items():
         setattr(incident, key, value)
     

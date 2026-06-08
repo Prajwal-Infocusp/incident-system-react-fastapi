@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { UserSummary, Severity } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
@@ -12,6 +13,7 @@ import { Alert, AlertDescription } from '../components/ui/Alert';
 
 export default function NewIncident() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,17 +109,19 @@ export default function NewIncident() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="assignee">Assignee</Label>
-                <Select
-                  value={assignedToId || 'unassigned'}
-                  onValueChange={(v) => setAssignedToId(v === 'unassigned' ? '' : v)}
-                  options={[
-                    { value: 'unassigned', label: 'Unassigned' },
-                    ...users.map(u => ({ value: u.id, label: u.name || u.email })),
-                  ]}
-                />
-              </div>
+              {user?.role !== 'USER' && (
+                <div className="space-y-2">
+                  <Label htmlFor="assignee">Assignee</Label>
+                  <Select
+                    value={assignedToId || 'unassigned'}
+                    onValueChange={(v) => setAssignedToId(v === 'unassigned' ? '' : v)}
+                    options={[
+                      { value: 'unassigned', label: 'Unassigned' },
+                      ...users.map(u => ({ value: u.id, label: u.name || u.email })),
+                    ]}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4">

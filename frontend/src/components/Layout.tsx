@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
-import { AlertTriangle, LayoutDashboard, LogOut } from 'lucide-react';
+import { AlertTriangle, LayoutDashboard, LogOut, Users } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Header } from './Header';
 
@@ -14,6 +14,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
 
+  const navItems = [...navigation];
+  if (user && user.role === 'ADMIN') {
+    navItems.push({ name: 'Users', href: '/users', icon: Users });
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <aside className="flex flex-col w-64 border-r bg-card text-card-foreground h-screen">
@@ -24,7 +29,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 p-4 space-y-1">
-          {navigation.map((item) => {
+          {navItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== '/' && location.pathname.startsWith(item.href));
             return (

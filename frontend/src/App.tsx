@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Incidents from './pages/Incidents';
 import IncidentDetail from './pages/IncidentDetail';
 import NewIncident from './pages/NewIncident';
+import Users from './pages/Users';
 import Layout from './components/Layout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -40,6 +41,7 @@ function AppRoutes() {
                 <Route path="/incidents" element={<Incidents />} />
                 <Route path="/incidents/new" element={<NewIncident />} />
                 <Route path="/incidents/:id" element={<IncidentDetail />} />
+                {user?.role === 'ADMIN' && <Route path="/users" element={<Users />} />}
               </Routes>
             </Layout>
           </ProtectedRoute>
