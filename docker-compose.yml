@@ -26,8 +26,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-username}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-incident_system}}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-incident_system}}
       SECRET_KEY: ${SECRET_KEY:-random-key}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-975957913940-d3f3qr6p4k6r619gmaa15m82se69h6v5.apps.googleusercontent.com}
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,11 +41,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-975957913940-d3f3qr6p4k6r619gmaa15m82se69h6v5.apps.googleusercontent.com}
     container_name: incident_system_frontend
     ports:
       - "5173:5173"
     environment:
       - API_URL=http://backend:8000
+      - BACKEND_URL=http://backend:8000
     volumes:
       - ./frontend:/app
       - /app/node_modules
