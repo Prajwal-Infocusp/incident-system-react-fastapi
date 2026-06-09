@@ -1,0 +1,91 @@
+name: Build and Deploy to GCP Cloud Run
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  PROJECT_ID: apt-theme-494313-u0
+  REGION: asia-south1
+  GAR_HOST: gcr.io
+  BACKEND_SERVICE: backend
+  FRONTEND_SERVICE: frontend
+
+jobs:
+  deploy:
+    name: Build & Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker Authentication
+        run: |
+          gcloud auth configure-docker ${{ env.GAR_HOST }} --quiet
+
+      # --- 1. BUILD & DEPLOY BACKEND ---
+      - name: Build and Push Backend Image
+        run: |
+          IMAGE_TAG="${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-backend-fastapi:${{ github.sha }}"
+          LATEST_TAG="${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-backend-fastapi:latest"
+          docker build -t $IMAGE_TAG -t $LATEST_TAG ./backend
+          docker push $IMAGE_TAG
+          docker push $LATEST_TAG
+
+      - name: Deploy Backend to Cloud Run
+        id: deploy-backend
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.BACKEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-backend-fastapi:${{ github.sha }}
+          flags: |
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=1
+            --memory=512Mi
+            --cpu=1
+          env_vars: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+
+      # --- 2. BUILD & DEPLOY FRONTEND ---
+      - name: Build and Push Frontend Image
+        run: |
+          IMAGE_TAG="${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-frontend-react:${{ github.sha }}"
+          LATEST_TAG="${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-frontend-react:latest"
+          
+          # Inject the Google Client ID during build time so Vite can bake it into static files
+          docker build \
+            --build-arg VITE_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            -t $IMAGE_TAG \
+            -t $LATEST_TAG \
+            ./frontend
+          docker push $IMAGE_TAG
+          docker push $LATEST_TAG
+
+      - name: Deploy Frontend to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.FRONTEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.GAR_HOST }}/${{ env.PROJECT_ID }}/incident-system-frontend-react:${{ github.sha }}
+          flags: |
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=1
+            --memory=512Mi
+            --cpu=1
+          env_vars: |
+            BACKEND_URL=${{ steps.deploy-backend.outputs.url }}
