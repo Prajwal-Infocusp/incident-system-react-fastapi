@@ -6,14 +6,18 @@ A full-stack, state-of-the-art Incident Management System designed to log, track
 
 ## 🚀 Key Features
 
-*   **Secure Authentication**: JWT-based user registration and login with roles (`USER`, `ADMIN`).
+*   **Multi-Role Access Control (RBAC)**: Supports three user roles:
+    *   `USER` (Regular Responder): Can only view, comment, and update (status/resolution) incidents created by or assigned to them. Cannot reassign.
+    *   `MANAGER` (Team Lead): Can view all incidents, assign/reassign incidents, escalate incidents, change priorities, and close incidents.
+    *   `ADMIN` (Administrator): Can perform all manager functions, plus manage user accounts, update user roles via dropdowns, and delete users.
+*   **Hybrid Authentication**: Supports standard Email & Password credentials alongside Google OAuth. If a user is created without a password, Google OAuth is enforced (1 account per email constraint).
 *   **Incident Lifecycle Tracking**: 
     *   Create incidents with specific title, description, and severity (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
     *   Update incident status (`OPEN`, `INVESTIGATING`, `RESOLVED`).
-    *   Assign incidents to registered users.
+    *   Assign/reassign incidents to registered users.
 *   **Interactive Dashboard**: Real-time stats counting total, open, investigating, resolved, and critical incidents, along with quick counts for incidents assigned to the logged-in user.
 *   **Audit Activity Log**: History tracking for every incident including creation, updates, assignee changes, and comments.
-*   **Filters**: Fast list filtering by status, severity, and assignee.
+*   **Advanced Filtering**: Fast list filtering by status, severity, assignee, and a quick-filter for "Unassigned Incidents" for easy triage.
 
 ---
 
@@ -152,15 +156,19 @@ The FastAPI backend exposes the following endpoints (all prefixed with `/api`):
 
 | Endpoint | Method | Description | Auth Required |
 |---|---|---|---|
-| `/auth/register` | `POST` | Registers a new user account | No |
+| `/auth/google` | `POST` | Authenticates users using a Google OAuth token | No |
+| `/auth/register` | `POST` | Registers a new user account with email & password | No |
 | `/auth/login` | `POST` | Logs in user and returns a JWT access token | No |
 | `/auth/me` | `GET` | Fetches details of the currently logged-in user | Yes |
-| `/users` | `GET` | Lists all registered users (for assignment options) | Yes |
-| `/incidents` | `GET` | Lists and filters incidents | Yes |
+| `/users` | `GET` | Lists all registered users (Admins see authentication types) | Yes |
+| `/users` | `POST` | Creates a new user account directly (Admin only) | Yes |
+| `/users/{id}` | `PATCH` | Updates user details, including their role (Admin only) | Yes |
+| `/users/{id}` | `DELETE` | Deletes a user and updates/nullifies their incidents (Admin only) | Yes |
+| `/incidents` | `GET` | Lists and filters incidents (filtered based on user role) | Yes |
 | `/incidents` | `POST` | Creates a new incident | Yes |
 | `/incidents/stats` | `GET` | Returns high-level metrics for the dashboard | Yes |
 | `/incidents/{id}` | `GET` | Returns comprehensive details of a single incident | Yes |
-| `/incidents/{id}` | `PATCH` | Updates incident fields (status, assignee, description) | Yes |
+| `/incidents/{id}` | `PATCH` | Updates incident fields (status, assignee, priority, etc.) | Yes |
 | `/incidents/{id}/activities` | `POST` | Adds a custom comment/activity to an incident | Yes |
 
 ---
@@ -185,12 +193,22 @@ Before starting the application, configure your environments by copying the prov
 *   `DATABASE_URL`: The full connection string for PostgreSQL (e.g., `postgresql://postgres:postgres@localhost:5432/incident_system` for local runs, or `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}` inside Docker).
 *   `SECRET_KEY`: A secure random key used for signing JWTs (must be at least 32 characters in production).
 *   `ACCESS_TOKEN_EXPIRE_MINUTES`: Expiration time for generated access tokens (defaults to 1 day).
+*   `GOOGLE_CLIENT_ID`: The Google OAuth client ID used to verify authentication tokens on the backend.
 
 #### Frontend Configuration
 *   `API_URL`: The URL pointing to the FastAPI backend (automatically set to `http://backend:8000` in Docker Compose, or defaults to `http://localhost:8000` for local runs).
+*   `VITE_GOOGLE_CLIENT_ID`: The Google OAuth client ID compiled into the static React files.
 
 ---
 
-## 🚢 Production Deployment
+## 🚢 Production Deployment & CI/CD
 
-For complete, step-by-step instructions on how to build, containerize, and deploy the entire full-stack application to **GCP Cloud Run** with a **Supabase PostgreSQL database**, please refer to our dedicated **[Production Deployment Guide (DEPLOYMENT.md)](DEPLOYMENT.md)**.
+For complete, step-by-step instructions on how to build, containerize, and deploy the entire full-stack application to **GCP Cloud Run** with a **Supabase PostgreSQL database**, please refer to our dedicated [gcp_deployment_guide.md](file:///home/prajwal/.gemini/antigravity-cli/brain/e99308e3-a027-4a53-b548-8bce93e20aa1/gcp_deployment_guide.md) file.
+
+### GitHub Actions CI/CD Pipeline
+The project includes a pre-configured GitHub Actions workflow in [.github/workflows/deploy.yml](file:///.github/workflows/deploy.yml) that will:
+1. Trigger on push to `master`.
+2. Authenticate with GCP using service account secrets.
+3. Build both frontend and backend Docker containers.
+4. Push images to your Google Container Registry (`gcr.io`).
+5. Deploy/update both services on Google Cloud Run.
