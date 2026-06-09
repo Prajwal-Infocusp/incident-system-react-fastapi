@@ -8,7 +8,7 @@ server {
     }
 
     location /api/ {
-        resolver 8.8.8.8 1.1.1.1 127.0.0.11 valid=30s; # Works both on GCP (8.8.8.8) and locally (127.0.0.11)
+        resolver 127.0.0.11 8.8.8.8 1.1.1.1 valid=30s ipv6=off; # Works both locally (127.0.0.11) and on GCP (8.8.8.8)
         set $upstream ${BACKEND_URL};
         proxy_pass $upstream;
         proxy_ssl_server_name on; # REQUIRED for SSL SNI handshake to GCP Cloud Run
