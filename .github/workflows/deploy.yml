@@ -11,6 +11,7 @@ env:
   GAR_HOST: gcr.io
   BACKEND_SERVICE: backend
   FRONTEND_SERVICE: frontend
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   deploy:
